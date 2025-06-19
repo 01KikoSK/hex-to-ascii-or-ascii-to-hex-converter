@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex/ASCII Converter</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Light gray background */
+        }
+        /* Custom scrollbar for textareas */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #e0e7ff; /* Lighter blue for track */
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #6366f1; /* Tailwind indigo-500 */
+            border-radius: 10px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #4f46e5; /* Darker indigo on hover */
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <!-- Main Container -->
+    <div class="bg-white shadow-2xl rounded-2xl p-6 md:p-10 max-w-2xl w-full">
+
+        <!-- Header Section -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2 tracking-tight">Hex & ASCII Converter</h1>
+            <p class="text-md text-gray-600">Seamlessly convert between hexadecimal values and ASCII text.</p>
+        </header>
+
+        <!-- Input Area -->
+        <div class="mb-6">
+            <label for="inputArea" class="block text-gray-700 text-sm font-semibold mb-2">Input:</label>
+            <textarea id="inputArea" rows="6" class="w-full p-4 border-2 border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 text-gray-800 text-base resize-y"></textarea>
+        </div>
+
+        <!-- Conversion Buttons -->
+        <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-4 mb-6">
+            <button id="hexToAsciiBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-75">
+                Hex to ASCII &#x2192;
+            </button>
+            <button id="asciiToHexBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-75">
+                ASCII to Hex &#x2192;
+            </button>
+        </div>
+
+        <!-- Output Area -->
+        <div class="mb-6">
+            <label for="outputArea" class="block text-gray-700 text-sm font-semibold mb-2">Output:</label>
+            <textarea id="outputArea" rows="6" readonly class="w-full p-4 border-2 border-gray-300 rounded-lg bg-gray-100 text-gray-800 text-base resize-y"></textarea>
+        </div>
+
+        <!-- Message Box for errors/feedback -->
+        <div id="messageBox" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4">
+            <span id="messageText" class="block sm:inline"></span>
+            <span class="absolute top-0 bottom-0 right-0 px-4 py-3 cursor-pointer" onclick="document.getElementById('messageBox').classList.add('hidden');">
+                <svg class="fill-current h-6 w-6 text-red-500" role="button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><title>Close</title><path d="M14.348 14.849a1.2 1.2 0 0 1-1.697 0L10 11.819l-2.651 3.029a1.2 1.2 0 1 1-1.697-1.697l2.758-3.15-2.759-3.152a1.2 1.2 0 1 1 1.697-1.697L10 8.183l2.651-3.031a1.2 1.2 0 1 1 1.697 1.697l-2.758 3.152 2.758 3.15a1.2 1.2 0 0 1 0 1.698z"/></svg>
+            </span>
+        </div>
+
+        <!-- Footer Section -->
+        <footer class="text-center mt-8 text-gray-500 text-sm">
+            <p>&copy; 2023 Advanced Converters. All rights reserved.</p>
+        </footer>
+
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const inputArea = document.getElementById('inputArea');
+        const outputArea = document.getElementById('outputArea');
+        const hexToAsciiBtn = document.getElementById('hexToAsciiBtn');
+        const asciiToHexBtn = document.getElementById('asciiToHexBtn');
+        const messageBox = document.getElementById('messageBox');
+        const messageText = document.getElementById('messageText');
+
+        /**
+         * Displays a message in the message box.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('error', 'info', 'success').
+         */
+        function showMessage(message, type = 'info') {
+            messageText.textContent = message;
+            messageBox.classList.remove('hidden', 'bg-red-100', 'border-red-400', 'text-red-700', 'bg-blue-100', 'border-blue-400', 'text-blue-700', 'bg-green-100', 'border-green-400', 'text-green-700');
+            messageBox.classList.add('block');
+
+            // Apply styling based on message type
+            if (type === 'error') {
+                messageBox.classList.add('bg-red-100', 'border-red-400', 'text-red-700');
+            } else if (type === 'info') {
+                messageBox.classList.add('bg-blue-100', 'border-blue-400', 'text-blue-700');
+            } else if (type === 'success') {
+                messageBox.classList.add('bg-green-100', 'border-green-400', 'text-green-700');
+            }
+        }
+
+        /**
+         * Hides the message box.
+         */
+        function hideMessage() {
+            messageBox.classList.add('hidden');
+        }
+
+        /**
+         * Converts a hexadecimal string to an ASCII string.
+         * @param {string} hex - The hexadecimal string to convert.
+         * @returns {string} The converted ASCII string or an error message.
+         */
+        function hexToAscii(hex) {
+            // Remove any whitespace and convert to uppercase for consistent processing
+            hex = hex.replace(/\s/g, '').toUpperCase();
+
+            // Check if the hex string has an even length
+            if (hex.length % 2 !== 0) {
+                return { error: true, message: "Invalid Hexadecimal input: Must have an even number of characters." };
+            }
+
+            // Check if the hex string contains only valid hex characters (0-9, A-F)
+            if (!/^[0-9A-F]*$/.test(hex)) {
+                return { error: true, message: "Invalid Hexadecimal input: Contains non-hex characters." };
+            }
+
+            let ascii = '';
+            for (let i = 0; i < hex.length; i += 2) {
+                const part = hex.substring(i, i + 2);
+                try {
+                    const charCode = parseInt(part, 16);
+                    if (isNaN(charCode)) {
+                        return { error: true, message: `Invalid hex pair detected: '${part}'.` };
+                    }
+                    ascii += String.fromCharCode(charCode);
+                } catch (e) {
+                    return { error: true, message: `Error converting hex pair '${part}': ${e.message}` };
+                }
+            }
+            return { error: false, value: ascii };
+        }
+
+        /**
+         * Converts an ASCII string to a hexadecimal string.
+         * @param {string} ascii - The ASCII string to convert.
+         * @returns {string} The converted hexadecimal string.
+         */
+        function asciiToHex(ascii) {
+            let hex = '';
+            for (let i = 0; i < ascii.length; i++) {
+                const charCode = ascii.charCodeAt(i);
+                // Convert charCode to hexadecimal, pad with leading zero if necessary
+                hex += charCode.toString(16).padStart(2, '0');
+            }
+            return { error: false, value: hex };
+        }
+
+        // Event listener for Hex to ASCII conversion
+        hexToAsciiBtn.addEventListener('click', () => {
+            hideMessage(); // Clear previous messages
+            const input = inputArea.value.trim();
+            if (input === '') {
+                showMessage("Please enter hexadecimal values to convert.", 'info');
+                outputArea.value = '';
+                return;
+            }
+
+            const result = hexToAscii(input);
+            if (result.error) {
+                outputArea.value = '';
+                showMessage(result.message, 'error');
+            } else {
+                outputArea.value = result.value;
+                showMessage("Hexadecimal successfully converted to ASCII.", 'success');
+            }
+        });
+
+        // Event listener for ASCII to Hex conversion
+        asciiToHexBtn.addEventListener('click', () => {
+            hideMessage(); // Clear previous messages
+            const input = inputArea.value.trim();
+            if (input === '') {
+                showMessage("Please enter ASCII text to convert.", 'info');
+                outputArea.value = '';
+                return;
+            }
+
+            const result = asciiToHex(input);
+            if (result.error) { // This should ideally not happen for ASCII to Hex unless very large input
+                outputArea.value = '';
+                showMessage(result.message, 'error');
+            } else {
+                outputArea.value = result.value;
+                showMessage("ASCII successfully converted to Hexadecimal.", 'success');
+            }
+        });
+
+        // Clear messages when input changes
+        inputArea.addEventListener('input', () => {
+            hideMessage();
+            outputArea.value = ''; // Optionally clear output on new input
+        });
+
+    </script>
+</body>
+</html>
